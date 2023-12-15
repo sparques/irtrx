@@ -189,13 +189,13 @@ func NewStateMachine(cmdHandler func(int16)) *StateMachine {
 }
 
 // SetCmdHandler lets you change the callback for when a cmd is received.
-func (hb *hexbug) SetCmdHandler(cmdHandler func(int16)) {
+func (hb *StateMachine) SetCmdHandler(cmdHandler func(int16)) {
 	hb.cmdHandler = cmdHandler
 }
 
 // HandleTimePair implements the irtrx.RxStateMachine interface
-func (hb *hexbug) HandleTimePair(pair irtrx.TimePair) {
-	on, off := pair[0], pair[1]
+func (hb *StateMachine) HandleTimePair(pair irtrx.TimePair) {
+	off := pair[1]
 
 	if off > 1600*time.Microsecond {
 		// start of frame/byte
@@ -231,7 +231,7 @@ type Cmd int16
 var (
 	hbStart = irtrx.TimePair{1750 * time.Microsecond, 350 * time.Microsecond}
 	hbZero  = irtrx.TimePair{350 * time.Microsecond, 350 * time.Microsecond}
-	hbOne   = irtrx.OnOffPair{1000 * time.Microsecond, 350 * time.Microsecond}
+	hbOne   = irtrx.TimePair{1000 * time.Microsecond, 350 * time.Microsecond}
 )
 
 func (c Cmd) MarshalFrame() []irtrx.TimePair {
