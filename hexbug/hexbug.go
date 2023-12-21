@@ -183,7 +183,7 @@ type StateMachine struct {
 // handler so you cannot make any blocking calls and should try to keep this as quick
 // as possible. It's a good idea to pass off the data to another control loop.
 func NewStateMachine(cmdHandler func(int16)) *StateMachine {
-	return &hexbug{
+	return &StateMachine{
 		cmdHandler: cmdHandler,
 	}
 }
