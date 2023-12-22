@@ -64,7 +64,7 @@ func NewStateMachine() *StateMachine {
 
 func (sm *StateMachine) HandleTimePair(pair irtrx.TimePair) {
 	on, off := pair[0], pair[1]
-	if on > ppmMinimumTimeBetweenFrames {
+	if on > minimumTimeBetweenFrames {
 		sm.last = time.Now()
 		sm.currentCh = 0
 		return
