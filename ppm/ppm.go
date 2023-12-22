@@ -1,5 +1,3 @@
-package ppm
-
 /*
 ppm.go - PPM for IR
 
@@ -13,22 +11,21 @@ So, fairly limited, but still pretty good.
 
 If using to drive a 180 degree servo, that means each graduation is 4.7 degrees (180/38).
 
-
 ## Example
 
-    const irPin = machine.GPIOX
-    ppm := irrx.PPM()
-    rx := irrx.NewRxDevice(irPin, ppm)
-    rx.Start()
+	const irPin = machine.GPIOX
+	psm := ppm.NewStateMachine()
+	rx := irrx.NewRxDevice(irPin, psm)
+	rx.Start()
 
-    for {
-        X := float32(ppm.Channel(0)-1500)/500
-        // X ranges from -1 to 1
-        servo.Set(X)
-        time.Sleep(100 * time.Millisecond)
-    }
-
+	for {
+	    X := float32(ppm.Channel(0)-1500)/500
+	    // X ranges from -1 to 1
+	    servo.Set(X)
+	    time.Sleep(100 * time.Millisecond)
+	}
 */
+package ppm
 
 import (
 	"time"
@@ -58,36 +55,36 @@ type StateMachine struct {
 }
 
 func NewStateMachine() *StateMachine {
-	def := &PPM{
+	def := &StateMachine{
 		Timeout:      100 * minimumTimeBetweenFrames,
 		safeChannels: SafeChannelsMid,
 	}
 	return def
 }
 
-func (p *PPM) HandleTimePair(pair irtrx.TimePair) {
+func (sm *StateMachine) HandleTimePair(pair irtrx.TimePair) {
 	on, off := pair[0], pair[1]
 	if on > ppmMinimumTimeBetweenFrames {
-		p.last = time.Now()
-		p.currentCh = 0
+		sm.last = time.Now()
+		sm.currentCh = 0
 		return
 	}
 
 	// prevent out-of-spec signals from panicking us.
-	if p.currentCh >= len(p.channels) {
+	if sm.currentCh >= len(sm.channels) {
 		return
 	}
 
-	p.channels[p.currentCh] = on + off
-	p.currentCh++
+	sm.channels[sm.currentCh] = on + off
+	sm.currentCh++
 }
 
-func (p *PPM) SetSafeChannels(sc [16]time.Duration) {
-	p.safeChannels = sc
+func (sm *StateMachine) SetSafeChannels(sc [16]time.Duration) {
+	sm.safeChannels = sc
 }
 
-func (p *PPM) IsSafe() bool {
-	return time.Since(p.last) > p.Timeout
+func (sm *StateMachine) IsSafe() bool {
+	return time.Since(sm.last) > sm.Timeout
 }
 
 // Channel returns the duration of the the pulse for the given channel.
@@ -95,20 +92,20 @@ func (p *PPM) IsSafe() bool {
 // to the caller.
 // If ppm.Timeout has been exceeded, the safe value for the channel is
 // returned.
-func (p *PPM) Channel(ch int) time.Duration {
-	if time.Since(p.last) > p.Timeout {
-		return p.safeChannels[ch]
+func (sm *StateMachine) Channel(ch int) time.Duration {
+	if time.Since(sm.last) > sm.Timeout {
+		return sm.safeChannels[ch]
 	}
-	return p.channels[ch]
+	return sm.channels[ch]
 }
 
 // Channels returns all the channels.
 // If ppm.Timeout has been exceeded, the safe values are returned
-func (p *PPM) Channels() [16]time.Duration {
-	if time.Since(p.last) > p.Timeout {
-		return p.safeChannels
+func (sm *StateMachine) Channels() [16]time.Duration {
+	if time.Since(sm.last) > sm.Timeout {
+		return sm.safeChannels
 	}
-	return p.channels
+	return sm.channels
 }
 
 func DurationToFloat32(d time.Duration) float32 {
