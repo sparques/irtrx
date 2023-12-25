@@ -58,6 +58,7 @@ func NewStateMachine() *StateMachine {
 	def := &StateMachine{
 		Timeout:      100 * minimumTimeBetweenFrames,
 		safeChannels: SafeChannelsMid,
+		channels:     SafeChannelsMid,
 	}
 	return def
 }
@@ -93,7 +94,7 @@ func (sm *StateMachine) IsSafe() bool {
 // If ppm.Timeout has been exceeded, the safe value for the channel is
 // returned.
 func (sm *StateMachine) Channel(ch int) time.Duration {
-	if time.Since(sm.last) > sm.Timeout {
+	if sm.IsSafe() {
 		return sm.safeChannels[ch]
 	}
 	return sm.channels[ch]
@@ -102,7 +103,7 @@ func (sm *StateMachine) Channel(ch int) time.Duration {
 // Channels returns all the channels.
 // If ppm.Timeout has been exceeded, the safe values are returned
 func (sm *StateMachine) Channels() [16]time.Duration {
-	if time.Since(sm.last) > sm.Timeout {
+	if sm.IsSafe() {
 		return sm.safeChannels
 	}
 	return sm.channels
