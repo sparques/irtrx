@@ -1,8 +1,10 @@
 // samsung implements an irtrx.RxStateMachine that can decode Samsung IR signals.
+// This requires StartInverted() and not Start()
 package samsung
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/sparques/irtrx"
@@ -30,7 +32,7 @@ func NewStateMachine(cmdHandler func(Frame)) *StateMachine {
 }
 
 func (sm *StateMachine) HandleTimePair(pair irtrx.TimePair) {
-	on, off := pair[0], pair[1]
+	off, on := pair[0], pair[1]
 	switch {
 	case on > 200*time.Millisecond:
 		return
@@ -58,9 +60,9 @@ func (sm *StateMachine) HandleTimePair(pair irtrx.TimePair) {
 }
 
 var (
-	StartPair = irtrx.TimePair{6 * time.Millisecond, 3 * time.Millisecond}
-	ZeroPair  = irtrx.TimePair{562 * time.Microsecond, 1687 * time.Microsecond}
-	OnePair   = irtrx.TimePair{562 * time.Microsecond, 562 * time.Microsecond}
+	StartPair = irtrx.TimePair{4500 * time.Microsecond, 4500 * time.Microsecond}
+	ZeroPair  = irtrx.TimePair{567 * time.Microsecond, 567 * time.Microsecond}
+	OnePair   = irtrx.TimePair{567 * time.Microsecond, 1650 * time.Microsecond}
 )
 
 func (f *Frame) MarshalFrame() []irtrx.TimePair {
@@ -92,4 +94,8 @@ func (f *Frame) UnmarshalFrame(buf uint32) error {
 	f.Addr = uint16(buf & 0xFFFF)
 	f.Cmd = uint16((buf >> 16) & 0xFFFF)
 	return nil
+}
+
+func (f Frame) String() string {
+	return fmt.Sprintf("{Addr: %04X, Cmd: %04X}", f.Addr, f.Cmd)
 }

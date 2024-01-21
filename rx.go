@@ -65,7 +65,7 @@ func (rx *RxDevice) invertedInterruptHandler(interruptPin Pin) {
 		// pin high
 		rx.lastHigh = time.Since(rx.lastPulse)
 	} else {
-		rx.stateMachine.HandleTimePair(TimePair{time.Since(rx.lastPulse), rx.lastHigh})
+		rx.stateMachine.HandleTimePair(TimePair{rx.lastHigh, time.Since(rx.lastPulse)})
 	}
 	rx.lastPulse = ptime
 }

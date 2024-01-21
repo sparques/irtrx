@@ -43,7 +43,7 @@ var (
 type StateMachine struct {
 	// where we store the values we've decoded
 	channels [16]time.Duration
-	// safeChannels are what we set channels to if we exceed Timout
+	// safeChannels are what we set channels to if we exceed Timeout
 	safeChannels [16]time.Duration
 
 	// if we haven't received a frame in Timeout amount of time, we return
@@ -70,13 +70,21 @@ func (sm *StateMachine) HandleTimePair(pair irtrx.TimePair) {
 		sm.currentCh = 0
 		return
 	}
+	// prevent starting up mid from from causing us to dump wrong values
+	// onto channels. The effect of this is the robot momentarily freaking
+	// out / running away from you.
+	if sm.last.IsZero() {
+		return
+	}
 
 	// prevent out-of-spec signals from panicking us.
 	if sm.currentCh >= len(sm.channels) {
 		return
 	}
 
-	sm.channels[sm.currentCh] = on + off
+	on += off
+	sm.channels[sm.currentCh] = on.Round(10 * time.Microsecond)
+
 	sm.currentCh++
 }
 
